@@ -1,17 +1,19 @@
 import torch
 from torch.optim import Adam
 import numpy as np
-
 from networks import ActorNetwork, CriticNetwork
 from utils import OUNoise
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-class DDPGAgent:
+class MADDPGAgent:
+    """
+    Defines a Multi-Agent Deep Deterministic Policy Gradient (MADDPG) agent
+    """
     def __init__(self, num_agents=2, obs_size=24, act_size=2, 
                  gamma=0.99, tau=1e-3, lr_actor=1.0e-4, lr_critic=1.0e-3, 
                  weight_decay_actor=1e-5, weight_decay_critic=1e-4, clip_grad=1.0):
-        super(DDPGAgent, self).__init__()
+        super(MADDPGAgent, self).__init__()
 
         self.actor = ActorNetwork(obs_size, act_size).to(device)
         self.critic = CriticNetwork(num_agents, obs_size, act_size).to(device)

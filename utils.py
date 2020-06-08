@@ -29,7 +29,7 @@ class OUNoise:
     from https://github.com/songrotek/DDPG/blob/master/ou_noise.py
     """
 
-    def __init__(self, action_dimension, scale=1.0, mu=0, theta=0.15, sigma=0.1):
+    def __init__(self, action_dimension, scale=1.0, mu=0, theta=0.15, sigma=0.05):
         self.action_dimension = action_dimension
         self.scale = scale
         self.mu = mu
