@@ -5,18 +5,19 @@ from collections import deque
 
 class ReplayBuffer:
     """
-    Experience replay buffer for storing data for training RL agent
+    Experience replay buffer for storing data for training RL agent. 
+    This is a light wrapper around a Python deque
     """
     def __init__(self, size):
         self.size = size
         self.deque = deque(maxlen=self.size)
 
     def push(self, experience):
-        """push into the buffer"""
+        """ Push into the buffer """
         self.deque.append(experience)
 
     def sample(self, batchsize):
-        """sample from the buffer"""
+        """ Sample from the buffer """
         return random.sample(self.deque, batchsize)
 
     def __len__(self):
@@ -46,11 +47,3 @@ class OUNoise:
         dx = self.theta * (self.mu - x) + self.sigma * np.random.randn(len(x))
         self.state = x + dx
         return torch.tensor(self.state * self.scale).float()
-
-
-def transpose_list(mylist):
-    return list(map(list, zip(*mylist)))
-
-def transpose_to_tensor(input_list):
-    make_tensor = lambda x: torch.tensor(x, dtype=torch.float)
-    return list(map(make_tensor, zip(*input_list)))

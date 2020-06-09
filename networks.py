@@ -4,8 +4,9 @@ import torch.nn.functional as F
 import numpy as np
 
 def hidden_init(layer):
+    """ Initialize hidden layer weights """
     fan_in = layer.weight.data.size()[0]
-    lim = 1. / np.sqrt(fan_in)
+    lim = 1.0 / np.sqrt(fan_in)
     return (-lim, lim)
 
 
@@ -63,4 +64,4 @@ class CriticNetwork(nn.Module):
         h2 = F.relu(self.fc2(h1))
         h3 = F.relu(self.fc3(torch.cat([h2, act_full], dim=1)))
         q = self.fc4(h3)
-        return q 
+        return q

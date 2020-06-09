@@ -15,22 +15,24 @@ class MADDPGAgent:
                  weight_decay_actor=1e-5, weight_decay_critic=1e-4, clip_grad=1.0):
         super(MADDPGAgent, self).__init__()
 
-        self.actor = ActorNetwork(obs_size, act_size).to(device)
-        self.critic = CriticNetwork(num_agents, obs_size, act_size).to(device)
-        self.target_actor = ActorNetwork(obs_size, act_size).to(device)
-        self.target_critic = CriticNetwork(num_agents, obs_size, act_size).to(device)
-        self.noise = OUNoise(act_size, scale=1.0)
-
-        # initialize targets same as original networks
-        hard_update(self.target_actor, self.actor)
-        hard_update(self.target_critic, self.critic)
-
         # Write parameters
         self.num_agents = num_agents
         self.gamma = gamma
         self.tau = tau
         self.clip_grad = clip_grad
 
+        # Create all the networks
+        self.actor = ActorNetwork(obs_size, act_size).to(device)
+        self.critic = CriticNetwork(num_agents, obs_size, act_size).to(device)
+        self.target_actor = ActorNetwork(obs_size, act_size).to(device)
+        self.target_critic = CriticNetwork(num_agents, obs_size, act_size).to(device)
+
+        # Copy initial network parameters to target networks
+        hard_update(self.target_actor, self.actor)
+        hard_update(self.target_critic, self.critic)
+
+        # Initialize training optimizers and OU noise
+        self.noise = OUNoise(act_size, scale=1.0)
         self.actor_optimizer = Adam(self.actor.parameters(), lr=lr_actor, 
                                     weight_decay=weight_decay_actor)
         self.critic_optimizer = Adam(self.critic.parameters(), lr=lr_critic, 
@@ -38,16 +40,20 @@ class MADDPGAgent:
 
 
     def act(self, obs, noise=0.0):
+        """ Act using the online actor network """
         obs = obs.to(device)
         action = self.actor(obs) + (noise*self.noise.noise()).to(device)
         action = torch.clamp(action, -1, 1)
         return action
 
+
     def target_act(self, obs, noise=0.0):
+        """ Act using the target actor network (used for training) """
         obs = obs.to(device)
         action = self.target_actor(obs) + (noise*self.noise.noise()).to(device)
         action = torch.clamp(action, -1, 1)
         return action
+
 
     def update_targets(self):
         """
@@ -56,9 +62,10 @@ class MADDPGAgent:
         soft_update(self.target_critic, self.critic, self.tau)
         soft_update(self.target_actor, self.actor, self.tau)
 
+
     def train(self, samples):
         """
-        Perform a training step
+        Perform a training step for critic and actor networks with soft update
         """
      
         # Unpack data from replay buffer and convert to tensors
@@ -123,7 +130,8 @@ class MADDPGAgent:
         # print("Agent {} losses. Actor: {} Critic: {}".format(aidx, al, cl))
 
 
-# https://github.com/ikostrikov/pytorch-ddpg-naf/blob/master/ddpg.py#L11
+# Network Update Utilities
+# From https://github.com/ikostrikov/pytorch-ddpg-naf/blob/master/ddpg.py#L11
 def soft_update(target, source, tau):
     """
     Perform DDPG soft update (move target params toward source based on weight
@@ -137,7 +145,6 @@ def soft_update(target, source, tau):
         target_param.data.copy_(target_param.data * (1.0 - tau) + param.data * tau)
 
 
-# https://github.com/ikostrikov/pytorch-ddpg-naf/blob/master/ddpg.py#L15
 def hard_update(target, source):
     """
     Copy network parameters from source to target
