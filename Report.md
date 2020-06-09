@@ -1,4 +1,4 @@
-# Continuous Control Project - Technical Report
+# Collaboration and Competition Project - Technical Report
 
 By Sebastian Castro, 2020
 
